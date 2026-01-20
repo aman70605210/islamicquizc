@@ -1,0 +1,70 @@
+const months = 12;
+let data = JSON.parse(localStorage.getItem("excelDonation")) || [];
+
+function save() {
+  localStorage.setItem("excelDonation", JSON.stringify(data));
+}
+
+function addDonor() {
+  const name = document.getElementById("donorName").value;
+  if (!name) return alert("Enter donor name");
+
+  data.push({
+    name,
+    months: Array(months).fill(false)
+  });
+
+  save();
+  render();
+  document.getElementById("donorName").value = "";
+}
+
+function toggle(donorIndex, monthIndex) {
+  data[donorIndex].months[monthIndex] =
+    !data[donorIndex].months[monthIndex];
+  save();
+  render();
+}
+
+function render() {
+  const tbody = document.querySelector("#donationTable tbody");
+  tbody.innerHTML = "";
+
+  data.forEach((donor, i) => {
+    let total = donor.months.filter(m => m).length * 100;
+
+    let row = `<tr><td>${donor.name}</td>`;
+    donor.months.forEach((m, j) => {
+      row += `
+        <td class="${m ? "paid" : "unpaid"}"
+            onclick="toggle(${i}, ${j})">
+          ${m ? "100" : ""}
+        </td>`;
+    });
+    row += `<td>₹${total}</td></tr>`;
+    tbody.innerHTML += row;
+  });
+}
+
+function downloadExcel() {
+  let csv = "Donor,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec,Total\n";
+
+  data.forEach(d => {
+    let total = 0;
+    let row = [d.name];
+    d.months.forEach(m => {
+      row.push(m ? 100 : "");
+      if (m) total += 100;
+    });
+    row.push(total);
+    csv += row.join(",") + "\n";
+  });
+
+  const blob = new Blob([csv], { type: "text/csv" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "donation-data.csv";
+  link.click();
+}
+
+render();
