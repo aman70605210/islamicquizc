@@ -1,1 +1,1 @@
-# islamicquizc
+# islamicquiz
